@@ -12,16 +12,17 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from controllers.countdown import CountDown
 from functools import partial
 
+
 class Ui_MainWindow(object):
     count_worker = None
 
-    def startCount(self):
-        if self.count_worker != None:
+    def start_count(self):
+        if self.count_worker is not None:
             self.count_worker.stop = True
 
             return
-
-        timeData = {
+        
+        time_data = {
             'hours': int(self.hours.text()),
             'minutes': int(self.minutes.text()),
             'seconds': int(self.seconds.text())
@@ -31,40 +32,64 @@ class Ui_MainWindow(object):
         self.minutes.setEnabled(False)
         self.seconds.setEnabled(False)
 
-        self.buttonControll.setText('PARAR')
+        self.start_button.setText('PARAR')
 
-        self.count_worker = CountDown(timeData)
-        self.count_worker.ended.connect(self.counterFinished)
-        self.count_worker.emitData.connect(self.setCounterTime)
+        self.count_worker = CountDown(time_data)
+        self.count_worker.ended.connect(self.counter_finished)
+        self.count_worker.emitData.connect(self.set_counter_time)
         self.count_worker.start()
         self.count_worker.exec_()
 
-    def counterFinished(self):
+    def counter_finished(self):
         self.count_worker = None
 
         self.hours.setEnabled(True)
         self.minutes.setEnabled(True)
         self.seconds.setEnabled(True)
 
-        self.buttonControll.setText('INICIAR')
+        self.hours.setText('00')
+        self.minutes.setText('00')
+        self.seconds.setText('00')
 
-    def setCounterTime(self, data):
-        timeData = {}
+        self.start_button.setText('INICIAR')
+
+    def set_counter_time(self, data):
+        time_data = {}
 
         for i in data:
-            timeData[i] = str(data[i])
+            time_data[i] = str(data[i])
 
-            if len(timeData[i]) == 1:
-                timeData[i] = '0' + timeData[i]
+            if len(time_data[i]) == 1:
+                time_data[i] = '0' + time_data[i]
 
-        self.hours.setText(timeData['hours'])
-        self.minutes.setText(timeData['minutes'])
-        self.seconds.setText(timeData['seconds'])
+        self.hours.setText(time_data['hours'])
+        self.minutes.setText(time_data['minutes'])
+        self.seconds.setText(time_data['seconds'])
+
+    def check_time_input(self, field):
+        field_data = field.text()
+        new_data = ''
+
+        for i in field_data:
+            char = ''
+
+            try:
+                int(i)
+                char = i
+            except ValueError:
+                char = '0'
+
+            new_data += char
+
+        if len(new_data) == 0:
+            new_data = '00'
+
+        field.setText(new_data)
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
-        MainWindow.setStyleSheet("background-color: \'#FFFFFF\'")
+        MainWindow.setStyleSheet("background-color: #000000")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.hours = QtWidgets.QLineEdit(self.centralwidget)
@@ -72,33 +97,38 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(30)
         self.hours.setFont(font)
-        self.hours.setText("")
         self.hours.setAlignment(QtCore.Qt.AlignCenter)
         self.hours.setObjectName("hours")
+        self.hours.setMaxLength(2)
+        self.hours.setStyleSheet('color: #FFFFFF')
+        self.hours.textChanged.connect(partial(self.check_time_input, self.hours))
         self.minutes = QtWidgets.QLineEdit(self.centralwidget)
         self.minutes.setGeometry(QtCore.QRect(320, 220, 141, 91))
         font = QtGui.QFont()
         font.setPointSize(30)
         self.minutes.setFont(font)
-        self.minutes.setText("")
         self.minutes.setAlignment(QtCore.Qt.AlignCenter)
         self.minutes.setObjectName("minutes")
+        self.minutes.setStyleSheet('color: #FFFFFF')
+        self.minutes.setMaxLength(2)
+        self.hours.textChanged.connect(partial(self.check_time_input, self.minutes))
         self.seconds = QtWidgets.QLineEdit(self.centralwidget)
         self.seconds.setGeometry(QtCore.QRect(500, 220, 141, 91))
         font = QtGui.QFont()
         font.setPointSize(30)
         self.seconds.setFont(font)
-        self.seconds.setText("")
         self.seconds.setAlignment(QtCore.Qt.AlignCenter)
         self.seconds.setObjectName("seconds")
-        self.buttonControll = QtWidgets.QPushButton(self.centralwidget)
-        self.buttonControll.setGeometry(QtCore.QRect(330, 380, 111, 51))
-        self.buttonControll.setStyleSheet("background-color: rgb(127, 127, 127);")
-        self.buttonControll.setObjectName("buttonControll")
+        self.seconds.setStyleSheet('color: #FFFFFF')
+        self.seconds.setMaxLength(2)
+        self.hours.textChanged.connect(partial(self.check_time_input, self.seconds))
+        self.start_button = QtWidgets.QPushButton(self.centralwidget)
+        self.start_button.setGeometry(QtCore.QRect(330, 380, 111, 51))
+        self.start_button.setStyleSheet("background-color: #444444; border: 1px solid #0000ff")
+        self.start_button.setObjectName("buttonControll")
         MainWindow.setCentralWidget(self.centralwidget)
 
-
-        self.buttonControll.clicked.connect(partial(self.startCount))
+        self.start_button.clicked.connect(partial(self.start_count))
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -106,5 +136,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.buttonControll.setText(_translate("MainWindow", "INICIAR"))
+        self.hours.setText(_translate('MainWindow', '00'))
+        self.minutes.setText(_translate('MainWindow', '00'))
+        self.seconds.setText(_translate('MainWindow', '00'))
+        self.start_button.setText(_translate("MainWindow", "INICIAR"))
 
